@@ -1,18 +1,18 @@
 <?php
 /*
-Plugin Name: FWP Number Range Buttons
+Plugin Name: Number Range Options Facet for FacetWP
 Plugin URI: https://facetwp.com/
-Description: Custom numeric range facet using pre-defined buttons
-Version: 1.1.0
+Description: Custom numeric range facet using pre-defined options
+Version: 1.2.0
 Author: Van Patten Media Inc.
 Author URI: https://www.vanpattenmedia.com/
-Text Domain: fwp_number_range_buttons
+Text Domain: fwp_number_range_options
 */
 
-class FwpNumberRangeButtons {
+class FwpNumberRangeOptions {
 
 	function __construct() {
-		$this->label = __( 'Number Range (Buttons)', 'fwp' );
+		$this->label = __( 'Number Range (Options)', 'fwp_number_range_options' );
 
 		add_filter( 'facetwp_index_row', array( $this, 'index_row' ), 5, 2 );
 	}
@@ -58,7 +58,7 @@ class FwpNumberRangeButtons {
 		// Empty output array
 		$output = array();
 
-		// Get the pre-defined range button choices
+		// Get the pre-defined range option choices
 		$facet_choices = explode( "\n", $params['facet']['choices'] );
 
 		foreach ( $facet_choices as $choice ) {
@@ -99,17 +99,17 @@ class FwpNumberRangeButtons {
 		// Loop through the choices
 		foreach( $choices as $choice ) {
 
-			// Determine whether or not to check the button
+			// Determine whether or not to check the option
 			if ( $choice['range'] == $value )
 				$selected = ' checked';
 			else
 				$selected = '';
 
-			// Add the button
-			$output .= '<div class="facetwp-number-range-button-wrap"><label class="facetwp-number-range-button"><input type="radio" name="facetwp_' . $params['facet']['name'] . '" value="' . $choice['range'] . '" data-facetwp-min="' . $choice['min'] . '" data-facetwp-max="' . $choice['max'] . '"' . $selected . '> ' . $choice['label'] . ' (' . $choice['count'] . ')</label></div>';
+			// Add the option
+			$output .= '<div class="facetwp-number-range-option-wrap"><label class="facetwp-number-range-option"><input type="radio" name="facetwp_' . $params['facet']['name'] . '" value="' . $choice['range'] . '" data-facetwp-min="' . $choice['min'] . '" data-facetwp-max="' . $choice['max'] . '"' . $selected . '> ' . $choice['label'] . ' (' . $choice['count'] . ')</label></div>';
 		}
 
-		// Return the buttons
+		// Return the options
 		return $output;
 	}
 
@@ -157,13 +157,13 @@ class FwpNumberRangeButtons {
 ?>
 <script>
 (function($) {
-	wp.hooks.addAction('facetwp/load/number_range_buttons', function($this, obj) {
+	wp.hooks.addAction('facetwp/load/number_range_options', function($this, obj) {
 		$this.find('.facet-source').val(obj.source);
 		$this.find('.facet-source-other').val(obj.source_other);
 		$this.find('.facet-choices').val(obj.choices);
 	});
 
-	wp.hooks.addFilter('facetwp/save/number_range_buttons', function($this, obj) {
+	wp.hooks.addFilter('facetwp/save/number_range_options', function($this, obj) {
 		obj['source']       = $this.find('.facet-source').val();
 		obj['source_other'] = $this.find('.facet-source-other').val();
 		obj['choices']      = $this.find('.facet-choices').val();
@@ -182,18 +182,18 @@ class FwpNumberRangeButtons {
 ?>
 <script>
 (function($) {
-	wp.hooks.addAction('facetwp/refresh/number_range_buttons', function($this, facet_name) {
-		var min = $this.find('.facetwp-number-range-button input:checked').attr('data-facetwp-min') || '';
-		var max = $this.find('.facetwp-number-range-button input:checked').attr('data-facetwp-max') || '';
+	wp.hooks.addAction('facetwp/refresh/number_range_options', function($this, facet_name) {
+		var min = $this.find('.facetwp-number-range-option input:checked').attr('data-facetwp-min') || '';
+		var max = $this.find('.facetwp-number-range-option input:checked').attr('data-facetwp-max') || '';
 		FWP.facets[facet_name] = ('' != min || '' != max) ? [min, max] : [];
 	});
 
-	wp.hooks.addFilter('facetwp/selections/number_range_buttons', function(output, params) {
+	wp.hooks.addFilter('facetwp/selections/number_range_options', function(output, params) {
 		return params.selected_values[0] + ' - ' + params.selected_values[1];
 	});
 
 	wp.hooks.addAction('facetwp/ready', function() {
-		$(document).on('change', '.facetwp-number-range-button input', function() {
+		$(document).on('change', '.facetwp-number-range-option input', function() {
 			FWP.autoload();
 		});
 	});
@@ -268,6 +268,6 @@ class FwpNumberRangeButtons {
 }
 
 add_filter( 'facetwp_facet_types', function( $types ) {
-	$types['number_range_buttons'] = new FwpNumberRangeButtons;
+	$types['number_range_options'] = new FwpNumberRangeOptions;
 	return $types;
 } );
