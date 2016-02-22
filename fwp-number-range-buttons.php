@@ -54,7 +54,7 @@ class FwpNumberRangeButtons {
 			$max        = $range_vals[1];
 
 			// Add the button
-			$output .= '<label class="facetwp-number-range-button"><input type="radio" name="facetwp_' . $params['facet']['name'] . '" value="' . $range . '" data-facetwp-min="' . $min . '" data-facetwp-max="' . $max . '"' . $selected . '> ' . $label . '</label>';
+			$output .= '<div class="facetwp-number-range-button-wrap"><label class="facetwp-number-range-button"><input type="radio" name="facetwp_' . $params['facet']['name'] . '" value="' . $range . '" data-facetwp-min="' . $min . '" data-facetwp-max="' . $max . '"' . $selected . '> ' . $label . '</label></div>';
 		}
 
 		// Return the buttons
