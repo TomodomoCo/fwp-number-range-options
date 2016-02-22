@@ -3,7 +3,7 @@
 Plugin Name: FWP Number Range Buttons
 Plugin URI: https://facetwp.com/
 Description: Custom numeric range facet using pre-defined buttons
-Version: 1.0.0
+Version: 1.1.0
 Author: Van Patten Media Inc.
 Author URI: https://www.vanpattenmedia.com/
 Text Domain: fwp_number_range_buttons
@@ -18,6 +18,70 @@ class FwpNumberRangeButtons {
 	}
 
 
+	function get_count( $params, $values ) {
+		global $wpdb;
+
+		$facet = $params['facet'];
+		$where = '';
+
+		// For dual ranges, find any overlap
+		if ( ! empty( $facet['source_other'] ) ) {
+			$start = empty( $values[0] ) ? -999999999999 : $values[0];
+			$end = empty( $values[1] ) ? 999999999999 : $values[1];
+
+			// http://stackoverflow.com/a/325964
+			$where .= " AND (facet_value + 0) <= '$end'";
+			$where .= " AND (facet_display_value + 0) >= '$start'";
+		}
+		// Otherwise, do a basic comparison
+		else {
+			if ( '' != $values[0] ) {
+				$where .= " AND (facet_value + 0) >= '{$values[0]}'";
+			}
+			if ( '' != $values[1] ) {
+				$where .= " AND (facet_display_value + 0) <= '{$values[1]}'";
+			}
+		}
+
+		$sql = "
+		SELECT DISTINCT post_id FROM {$wpdb->prefix}facetwp_index
+		WHERE facet_name = '{$facet['name']}' $where";
+
+		return count( $wpdb->get_col( $sql ) );
+	}
+
+
+    /**
+     * Load the available choices
+     */
+    function load_values( $params ) {
+		// Empty output array
+		$output = array();
+
+		// Get the pre-defined range button choices
+		$facet_choices = explode( "\n", $params['facet']['choices'] );
+
+		foreach ( $facet_choices as $choice ) {
+
+			// Split the label from the range
+			$choice = explode( ' | ', $choice );
+
+			// Get the min/max
+			$range_vals = explode( '-', $choice[1] );
+
+			$output[] = array(
+				'label' => $choice[0],
+				'range' => $choice[1],
+				'min'   => $range_vals[0],
+				'max'   => $range_vals[1],
+				'count' => $this->get_count( $params, $range_vals ),
+			);
+		}
+
+        return $output;
+    }
+
+
 	/**
 	 * Generate the facet HTML
 	 */
@@ -25,36 +89,24 @@ class FwpNumberRangeButtons {
 		// Start the output
 		$output = '';
 
+		// Get the field values
+        $choices = (array) $params['values'];
+
 		// Get the current values
 		$value = $params['selected_values'];
-		error_log( print_r( $value, true ) );
-		$value = empty( $value ) ? array( '', '', ) : $value;
-		$value = implode( '-', $value );
-
-		// Get the pre-defined range button choices
-		$facet_choices = explode( "\n", $params['facet']['choices'] );
+		$value = empty( $value ) ? '' : implode( '-', $value );
 
 		// Loop through the choices
-		foreach( $facet_choices as $choice ) {
-
-			// Split the label from the range
-			$choice     = explode( ' | ', $choice );
-			$label      = $choice[0];
-			$range      = $choice[1];
+		foreach( $choices as $choice ) {
 
 			// Determine whether or not to check the button
-			if ( $range == $value )
+			if ( $choice['range'] == $value )
 				$selected = ' checked';
 			else
 				$selected = '';
 
-			// Get the min/max
-			$range_vals = explode( '-', $range );
-			$min        = $range_vals[0];
-			$max        = $range_vals[1];
-
 			// Add the button
-			$output .= '<div class="facetwp-number-range-button-wrap"><label class="facetwp-number-range-button"><input type="radio" name="facetwp_' . $params['facet']['name'] . '" value="' . $range . '" data-facetwp-min="' . $min . '" data-facetwp-max="' . $max . '"' . $selected . '> ' . $label . '</label></div>';
+			$output .= '<div class="facetwp-number-range-button-wrap"><label class="facetwp-number-range-button"><input type="radio" name="facetwp_' . $params['facet']['name'] . '" value="' . $choice['range'] . '" data-facetwp-min="' . $choice['min'] . '" data-facetwp-max="' . $choice['max'] . '"' . $selected . '> ' . $choice['label'] . ' (' . $choice['count'] . ')</label></div>';
 		}
 
 		// Return the buttons
